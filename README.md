@@ -69,7 +69,7 @@ Este projeto faz parte do curso **"Machine Learning em Inteligência Artificial"
 **Como Fazer Análise Univariada no Notebook:**
 
 ```python
-def analyze_categorical(df, column):
+# Execute células 20-40 para análise de variáveis categóricas:
     """Análise completa de variável categórica"""
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
