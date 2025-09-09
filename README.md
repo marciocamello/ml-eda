@@ -6,7 +6,455 @@ Este projeto faz parte do curso **"Machine Learning em Inteligência Artificial"
 
 ### 📋 O que é Churn?
 
-**Churn** é a taxa de abandono de clientes - uma métrica crucial para empresas que precisam:
+**Churn** é a taxa de abandono de clientes - uma métrica crucial par**Total de Células**: 140+ (sendo 15 markdown e 125+ código)  
+**Execuções**: Todas as células executadas com sucesso  
+**Datasets**: 3 arquivos CSV unificados em 1 DataFrame principal
+
+---
+
+## 🚀 **Templates Jupyter para Estudos**
+
+### � **Células Base para EDA**
+
+**Template para carregamento inicial:**
+
+```python
+# Importações essenciais
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.stats import chi2_contingency
+
+# Configuração de visualização
+plt.style.use('ggplot')
+sns.set_palette("husl")
+```
+
+**Template para merge de datasets:**
+
+```python
+# Carregamento dos 3 datasets
+df_customers = pd.read_csv('./datasets/churn_customers.csv')
+df_services = pd.read_csv('./datasets/churn_services.csv')
+df_contracts = pd.read_csv('./datasets/churn_contracts.csv')
+
+# Merge sequencial
+df_unified = df_customers.merge(df_services, on='customerID', how='inner')\
+                        .merge(df_contracts, on='customerID', how='inner')
+
+print(f"📊 Dados unificados: {df_unified.shape}")
+```
+
+### 🧪 **Templates para Testes de Hipóteses**
+
+**Template Chi-Square para variáveis categóricas:**
+
+```python
+def test_hypothesis(df, var1, var2, hypothesis_name):
+    """Template para teste de hipótese com Chi-Square"""
+
+    # 1. Criar tabela de contingência
+    crosstab = pd.crosstab(df[var1], df[var2], margins=True, margins_name='Total')
+    print(f"📋 Tabela de Contingência - {hypothesis_name}")
+    print(crosstab)
+    print("\n" + "="*50 + "\n")
+
+    # 2. Aplicar teste Chi-Square
+    chi2, p_value, dof, expected = chi2_contingency(crosstab.iloc[:-1, :-1])
+
+    # 3. Resultados
+    print(f"🧪 Teste Chi-Square - {hypothesis_name}")
+    print(f"Chi² = {chi2:.4f}")
+    print(f"P-value = {p_value:.6f}")
+    print(f"Graus de liberdade = {dof}")
+
+    # 4. Conclusão
+    alpha = 0.05
+    if p_value <= alpha:
+        print(f"✅ HIPÓTESE CONFIRMADA (p ≤ {alpha})")
+        print("➡️  As variáveis são dependentes (há associação)")
+    else:
+        print(f"❌ HIPÓTESE REJEITADA (p > {alpha})")
+        print("➡️  Não há evidência de associação")
+
+    return {'chi2': chi2, 'p_value': p_value, 'confirmed': p_value <= alpha}
+
+# Exemplo de uso:
+result = test_hypothesis(df_churn, 'Churn', 'Contract',
+                        'Contrato Mensal → Maior Churn')
+```
+
+### 📊 **Templates de Visualização**
+
+**Template para análise univariada:**
+
+```python
+def analyze_categorical(df, column):
+    """Análise completa de variável categórica"""
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+    # Gráfico de barras
+    counts = df[column].value_counts()
+    ax1 = counts.plot.bar(ax=axes[0], color='skyblue')
+    ax1.set_title(f'Distribuição de {column}')
+    ax1.bar_label(ax1.containers[0])
+
+    # Gráfico de pizza
+    ax2 = counts.plot.pie(ax=axes[1], autopct='%1.1f%%', startangle=90)
+    ax2.set_ylabel('')
+
+    plt.tight_layout()
+    plt.show()
+
+    # Estatísticas
+    print(f"� Análise de {column}:")
+    print(f"Total de categorias: {df[column].nunique()}")
+    print(f"Categoria mais frequente: {df[column].mode()[0]}")
+    print("\nDistribuição:")
+    print(df[column].value_counts(normalize=True) * 100)
+
+# Exemplo de uso:
+analyze_categorical(df_churn, 'Contract')
+```
+
+**Template para correlação:**
+
+```python
+def correlation_analysis(df, var1, var2):
+    """Análise de correlação entre variáveis numéricas"""
+
+    # Cálculos
+    pearson = df[var1].corr(df[var2])
+    spearman = df[var1].corr(df[var2], method='spearman')
+
+    # Visualização
+    plt.figure(figsize=(8, 6))
+    plt.scatter(df[var1], df[var2], alpha=0.6, color='coral')
+    plt.xlabel(var1)
+    plt.ylabel(var2)
+    plt.title(f'Correlação: {var1} vs {var2}')
+
+    # Linha de tendência
+    z = np.polyfit(df[var1], df[var2], 1)
+    p = np.poly1d(z)
+    plt.plot(df[var1], p(df[var1]), "r--", alpha=0.8)
+
+    # Texto com correlações
+    plt.text(0.05, 0.95, f'Pearson: {pearson:.3f}\nSpearman: {spearman:.3f}',
+             transform=plt.gca().transAxes, bbox=dict(boxstyle="round", facecolor='wheat'))
+
+    plt.show()
+
+    return {'pearson': pearson, 'spearman': spearman}
+
+# Exemplo de uso:
+correlation_analysis(df_churn, 'tenure', 'TotalCharges')
+```
+
+### 🔍 **Templates para Detecção de Outliers**
+
+**Template IQR (Método do Quartil):**
+
+```python
+def detect_outliers_iqr(df, column):
+    """Detecção de outliers usando método IQR"""
+
+    Q1 = df[column].quantile(0.25)
+    Q3 = df[column].quantile(0.75)
+    IQR = Q3 - Q1
+
+    # Limites
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    # Outliers
+    outliers = df[(df[column] < lower_bound) | (df[column] > upper_bound)]
+
+    # Visualização
+    plt.figure(figsize=(12, 4))
+
+    plt.subplot(1, 2, 1)
+    plt.boxplot(df[column])
+    plt.title(f'BoxPlot - {column}')
+    plt.ylabel(column)
+
+    plt.subplot(1, 2, 2)
+    plt.hist(df[column], bins=30, alpha=0.7, color='lightblue', edgecolor='black')
+    plt.axvline(lower_bound, color='red', linestyle='--', label=f'Lower Bound: {lower_bound:.2f}')
+    plt.axvline(upper_bound, color='red', linestyle='--', label=f'Upper Bound: {upper_bound:.2f}')
+    plt.title(f'Histograma - {column}')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+    print(f"📊 Análise de Outliers - {column}")
+    print(f"Q1: {Q1:.2f}")
+    print(f"Q3: {Q3:.2f}")
+    print(f"IQR: {IQR:.2f}")
+    print(f"Limite Inferior: {lower_bound:.2f}")
+    print(f"Limite Superior: {upper_bound:.2f}")
+    print(f"🚨 Total de outliers: {len(outliers)} ({len(outliers)/len(df)*100:.1f}%)")
+
+    return outliers
+
+# Exemplo de uso:
+outliers_tenure = detect_outliers_iqr(df_churn, 'tenure')
+```
+
+**Template Z-Score:**
+
+```python
+from scipy import stats
+
+def detect_outliers_zscore(df, column, threshold=3):
+    """Detecção de outliers usando Z-Score"""
+
+    z_scores = np.abs(stats.zscore(df[column]))
+    outliers = df[z_scores > threshold]
+
+    plt.figure(figsize=(10, 4))
+
+    plt.subplot(1, 2, 1)
+    plt.scatter(range(len(z_scores)), z_scores, alpha=0.6)
+    plt.axhline(y=threshold, color='red', linestyle='--', label=f'Threshold: {threshold}')
+    plt.title('Z-Scores')
+    plt.xlabel('Índice')
+    plt.ylabel('Z-Score')
+    plt.legend()
+
+    plt.subplot(1, 2, 2)
+    plt.hist(z_scores, bins=30, alpha=0.7, color='lightgreen', edgecolor='black')
+    plt.axvline(threshold, color='red', linestyle='--', label=f'Threshold: {threshold}')
+    plt.title('Distribuição Z-Scores')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+    print(f"🔍 Z-Score Analysis - {column}")
+    print(f"Threshold: {threshold}")
+    print(f"🚨 Outliers encontrados: {len(outliers)} ({len(outliers)/len(df)*100:.1f}%)")
+
+    return outliers
+
+# Exemplo de uso:
+outliers_zscore = detect_outliers_zscore(df_churn, 'TotalCharges')
+```
+
+### 🎯 **Templates para Feature Engineering**
+
+**Template para criar variáveis categóricas:**
+
+```python
+def create_categorical_features(df):
+    """Criar novas features categóricas para análise"""
+
+    df_new = df.copy()
+
+    # 1. Tenure em grupos
+    df_new['TenureGroup'] = pd.cut(df_new['tenure'],
+                                  bins=[0, 12, 24, 48, 100],
+                                  labels=['0-1 ano', '1-2 anos', '2-4 anos', '4+ anos'])
+
+    # 2. MonthlyCharges em quartis
+    df_new['ChargesQuartil'] = pd.qcut(df_new['MonthlyCharges'],
+                                      q=4,
+                                      labels=['Baixo', 'Médio-Baixo', 'Médio-Alto', 'Alto'])
+
+    # 3. TotalCharges em categorias
+    median_total = df_new['TotalCharges'].median()
+    df_new['TotalChargesCategory'] = np.where(df_new['TotalCharges'] > median_total,
+                                             'Alto', 'Baixo')
+
+    # 4. Cliente novo (< 6 meses)
+    df_new['ClienteNovo'] = np.where(df_new['tenure'] < 6, 'Sim', 'Não')
+
+    # 5. Faixa etária detalhada
+    df_new['FaixaEtariaDetalhada'] = np.where(df_new['SeniorCitizen'] == 1,
+                                             'Idoso (65+)', 'Adulto (<65)')
+
+    print("✅ Novas features categóricas criadas:")
+    print("- TenureGroup: Tempo de contrato em grupos")
+    print("- ChargesQuartil: Cobrança mensal em quartis")
+    print("- TotalChargesCategory: Total pago (Alto/Baixo)")
+    print("- ClienteNovo: Cliente com menos de 6 meses")
+    print("- FaixaEtariaDetalhada: Faixa etária expandida")
+
+    return df_new
+
+# Exemplo de uso:
+df_enhanced = create_categorical_features(df_churn)
+```
+
+### 📊 **Template Dashboard Completo**
+
+**Dashboard automatizado em uma célula:**
+
+```python
+def create_eda_dashboard(df):
+    """Dashboard completo de EDA"""
+
+    fig, axes = plt.subplots(3, 3, figsize=(18, 15))
+    fig.suptitle('Dashboard EDA - Análise de Churn', fontsize=16, y=0.98)
+
+    # 1. Distribuição de Churn
+    churn_counts = df['Churn'].value_counts()
+    axes[0,0].pie(churn_counts.values, labels=churn_counts.index, autopct='%1.1f%%')
+    axes[0,0].set_title('Distribuição de Churn')
+
+    # 2. Contratos por tipo
+    df['Contract'].value_counts().plot.bar(ax=axes[0,1], color='lightcoral')
+    axes[0,1].set_title('Tipos de Contrato')
+    axes[0,1].tick_params(axis='x', rotation=45)
+
+    # 3. Histograma Tenure
+    axes[0,2].hist(df['tenure'], bins=20, color='skyblue', edgecolor='black')
+    axes[0,2].set_title('Distribuição - Tempo de Contrato')
+    axes[0,2].set_xlabel('Meses')
+
+    # 4. Boxplot Charges por Churn
+    df.boxplot(column='MonthlyCharges', by='Churn', ax=axes[1,0])
+    axes[1,0].set_title('MonthlyCharges vs Churn')
+
+    # 5. Faixa Etária vs Churn
+    pd.crosstab(df['SeniorCitizen'], df['Churn']).plot.bar(ax=axes[1,1])
+    axes[1,1].set_title('Idade vs Churn')
+    axes[1,1].set_xlabel('Senior Citizen (0=Não, 1=Sim)')
+
+    # 6. Scatter Tenure vs Total
+    scatter = axes[1,2].scatter(df['tenure'], df['TotalCharges'],
+                               c=df['Churn'].map({'No': 0, 'Yes': 1}),
+                               alpha=0.6, cmap='coolwarm')
+    axes[1,2].set_title('Tenure vs TotalCharges')
+    axes[1,2].set_xlabel('Tenure (meses)')
+    axes[1,2].set_ylabel('Total Charges')
+
+    # 7. Pagamento vs Churn
+    payment_churn = pd.crosstab(df['PaymentMethod'], df['Churn'], normalize='index')
+    payment_churn.plot.bar(ax=axes[2,0], stacked=True)
+    axes[2,0].set_title('Método Pagamento vs Churn')
+    axes[2,0].tick_params(axis='x', rotation=45)
+
+    # 8. Internet Service vs Churn
+    internet_churn = pd.crosstab(df['InternetService'], df['Churn'])
+    internet_churn.plot.bar(ax=axes[2,1])
+    axes[2,1].set_title('Internet Service vs Churn')
+    axes[2,1].tick_params(axis='x', rotation=45)
+
+    # 9. Correlação das variáveis numéricas
+    numeric_cols = ['tenure', 'MonthlyCharges', 'TotalCharges']
+    corr_matrix = df[numeric_cols].corr()
+    im = axes[2,2].imshow(corr_matrix, cmap='coolwarm', aspect='auto')
+    axes[2,2].set_xticks(range(len(numeric_cols)))
+    axes[2,2].set_yticks(range(len(numeric_cols)))
+    axes[2,2].set_xticklabels(numeric_cols, rotation=45)
+    axes[2,2].set_yticklabels(numeric_cols)
+    axes[2,2].set_title('Matriz de Correlação')
+
+    # Adicionar valores na matriz
+    for i in range(len(numeric_cols)):
+        for j in range(len(numeric_cols)):
+            axes[2,2].text(j, i, f'{corr_matrix.iloc[i, j]:.2f}',
+                          ha='center', va='center')
+
+    plt.tight_layout()
+    plt.show()
+
+    print("📊 Dashboard gerado com 9 visualizações principais!")
+    print("💡 Use este template como base para seus próprios dashboards")
+
+# Exemplo de uso:
+create_eda_dashboard(df_churn)
+```
+
+---
+
+## 🔗 **Links do Curso Rocketseat**
+
+### 📚 **Módulos Relacionados:**
+
+- **🎯 Análise Exploratória de Dados**: 28 aulas (4h24min) - [Link](https://app.rocketseat.com.br/classroom/analise-exploratoria-de-dados-com-panda)
+  - 🧠 **Quiz disponível neste README** - 10 questões sobre conceitos fundamentais
+- **📊 Estatística para Devs**: 23 aulas (1h56min) - [Link](https://app.rocketseat.com.br/classroom/estatistica-para-devs)
+- **🤖 Aprendizado de Máquina**: 15 aulas (1h47min) - [Link](https://app.rocketseat.com.br/classroom/meu-primeiro-modelo-com-scikit-learn)
+
+### 🏆 **Certificações Disponíveis:**
+
+- 🥇 **Fundamentos de IA** (Micro-certificado)
+- 🥇 **Algoritmos Supervisionados** (Micro-certificado)
+- 🥇 **Algoritmos Não Supervisionados** (Micro-certificado)
+- 🥇 **Ensemble de Modelos** (Micro-certificado)
+
+---
+
+## 🎯 **Próximos Módulos do Curso**
+
+### 🔮 **Sequência de Aprendizado:**
+
+1. ✅ **EDA com Pandas** (CONCLUÍDO)
+2. 🔄 **Aprendizado de Máquina** (em progresso)
+3. ⏳ **Algoritmos Supervisionados** (próximo)
+4. ⏳ **Algoritmos Não Supervisionados**
+5. ⏳ **Ensemble de Modelos**
+6. ⏳ **Desafio Final**
+
+### 📊 **Algoritmos que Serão Estudados:**
+
+- **Regressão**: Linear Simples/Múltipla, Polinomial, Logística
+- **Classificação**: Árvore de Decisão, Naive Bayes
+- **Clustering**: K-Means, Hierárquica
+- **Redução**: PCA, t-SNE
+- **Ensemble**: Random Forest, CatBoost, LightGBM
+
+---
+
+## 💡 **Como Usar Este Projeto para Estudar**
+
+### 📖 **Para Revisão de Conceitos:**
+
+1. **README**: Teoria completa e templates prontos
+2. **Notebook**: Implementação passo-a-passo (139 células)
+3. **Templates**: Códigos reutilizáveis para copiar/colar
+
+### 🔬 **Para Experimentar no Jupyter:**
+
+```bash
+# 1. Ativar ambiente
+pipenv shell
+
+# 2. Abrir Jupyter Notebook
+jupyter notebook
+
+# 3. Abrir eda_churn.ipynb para estudar
+# 4. Copiar templates deste README para experimentar
+```
+
+### 🎯 **Para Novos Projetos:**
+
+**Workflow recomendado:**
+
+1. **Copie os templates** de código deste README
+2. **Adapte para seus dados** (altere nomes de colunas)
+3. **Formule suas hipóteses** antes de analisar
+4. **Use os templates de visualização** e testes estatísticos
+5. **Documente insights** em células markdown
+
+### 📚 **Templates Disponíveis:**
+
+- ✅ **Carregamento de dados** e merge
+- ✅ **Testes de hipóteses** (Chi-Square automatizado)
+- ✅ **Análise univariada** (categóricas e numéricas)
+- ✅ **Correlação** com visualizações
+- ✅ **Detecção de outliers** (IQR + Z-Score)
+- ✅ **Feature engineering** (novas variáveis)
+- ✅ **Dashboard completo** (9 gráficos em uma célula)
+
+---
+
+_Este README é um documento vivo que evolui conforme o progresso no curso e projeto!_ 🚀sas que precisam:
 
 - Identificar clientes com maior probabilidade de cancelar
 - Entender os motivos do abandono
@@ -452,18 +900,260 @@ df_churn.plot.scatter(x='variavel1', y='variavel2')
 
 ---
 
+## 🧠 **Quiz: EDA com Pandas - Teste Seus Conhecimentos**
+
+### 📝 **Quiz Aplicando EDA com Pandas**
+
+Este quiz foi baseado no módulo "Aplicando EDA com Pandas" do curso Rocketseat. Use-o para revisar os conceitos principais!
+
+---
+
+#### **Questão 01/10**
+
+**O que é uma matriz de correlação usada na Análise Exploratória de Dados?**
+
+- [ ] Um histograma de uma única variável
+- [ ] Um gráfico de dispersão entre duas variáveis
+- [ ] Uma matriz de confusão usada em classificação
+- [x] **Uma tabela que mostra a correlação entre diferentes variáveis**
+
+💡 **Explicação:** Uma matriz de correlação é uma tabela quadrada que apresenta os coeficientes de correlação entre pares de variáveis em um conjunto de dados. Cada célula mostra valores de -1 a +1, onde +1 indica correlação positiva forte, -1 correlação negativa forte, e 0 correlação fraca.
+
+---
+
+#### **Questão 02/10**
+
+**Qual das seguintes opções retorna o número de linhas e colunas de um DataFrame?**
+
+- [ ] `df.length`
+- [ ] `df.size`
+- [ ] `df.dimensions`
+- [x] **`df.shape`**
+
+💡 **Explicação:** O atributo `df.shape` retorna uma tupla com as dimensões do DataFrame (linhas, colunas). Exemplo: `(100, 5)` significa 100 linhas e 5 colunas.
+
+---
+
+#### **Questão 03/10**
+
+**Qual função do pandas é usada para obter estatísticas descritivas de um DataFrame?**
+
+- [ ] `df.statistics()`
+- [ ] `df.summary()`
+- [ ] `df.info()`
+- [x] **`df.describe()`**
+
+💡 **Explicação:** A função `df.describe()` retorna estatísticas como count, mean, std, min, quartis (25%, 50%, 75%) e max.
+
+---
+
+#### **Questão 04/10**
+
+**Qual método do pandas é usado para lidar com valores ausentes substituindo-os pela média da coluna?**
+
+- [ ] `df.fillna(method='mean')`
+- [ ] `df.replacena(mean=True)`
+- [ ] `df.meanna()`
+- [x] **`df.fillna(df.mean())`**
+
+```python
+# Exemplo prático no nosso projeto:
+media_TotalCharges = df_churn.TotalCharges.mean()
+df_churn.fillna(value={'TotalCharges': media_TotalCharges})
+
+# Ou de forma mais direta:
+df_churn.TotalCharges.fillna(df_churn.TotalCharges.mean())
+```
+
+💡 **Explicação:** O método `fillna()` preenche valores ausentes (NaN). Para usar a média: `df.fillna(df.mean())`. O parâmetro `method` é usado para 'forward' ou 'backward', mas não aceita 'mean'.
+
+---
+
+#### **Questão 05/10**
+
+**Qual dos seguintes NÃO é uma técnica comum na Análise Exploratória de Dados?**
+
+- [ ] Visualização de dados
+- [ ] Análise de clusters
+- [ ] Redução de dimensionalidade
+- [x] **Reamostragem de dados**
+
+💡 **Explicação:** Reamostragem é mais associada a técnicas estatísticas avançadas (bootstrap, validação cruzada) do que à EDA básica.
+
+---
+
+#### **Questão 06/10**
+
+**Qual é o objetivo principal da Análise Exploratória de Dados?**
+
+- [ ] Normalizar os dados
+- [ ] Treinar um modelo de machine learning
+- [ ] Corrigir erros nos dados
+- [x] **Resumir e visualizar os principais aspectos dos dados**
+
+💡 **Explicação:** O objetivo da EDA é compreender os dados através de resumos estatísticos e visualizações, identificar padrões, detectar outliers e formular hipóteses.
+
+---
+
+#### **Questão 07/10**
+
+**Como você pode selecionar todas as linhas de um DataFrame onde o valor na coluna 'A' é maior que 10?**
+
+- [ ] `df.loc['A' > 10]`
+- [ ] `df.where('A' > 10)`
+- [ ] `df.select_rows('A' > 10)`
+- [x] **`df[df['A'] > 10]`**
+
+💡 **Explicação:** A sintaxe correta é `df[df['A'] > 10]`. A expressão `df['A'] > 10` cria uma máscara booleana que filtra as linhas.
+
+```python
+# Exemplo prático no nosso projeto:
+# Clientes com mais de 12 meses de contrato
+clientes_antigos = df_churn[df_churn['tenure'] > 12]
+
+# Clientes com cobrança mensal alta (> 70)
+clientes_cobranca_alta = df_churn[df_churn['MonthlyCharges'] > 70]
+```
+
+---
+
+#### **Questão 08/10**
+
+**Qual é a vantagem de usar gráficos na Análise Exploratória de Dados?**
+
+- [ ] Aumentar a velocidade de processamento dos dados
+- [ ] Garantir a precisão dos dados
+- [ ] Substituir a necessidade de modelos preditivos
+- [x] **Facilitar a identificação de padrões e anomalias nos dados**
+
+💡 **Explicação:** Gráficos aproveitam nossa capacidade natural de processar informações visuais, permitindo identificar padrões, anomalias e relacionamentos rapidamente.
+
+---
+
+#### **Questão 09/10**
+
+**Qual das seguintes opções é usada para criar um gráfico de barras em um DataFrame pandas?**
+
+- [ ] `df.chart.bar()`
+- [ ] `df.visualize.bar()`
+- [ ] `df.graph.bar()`
+- [x] **`df.plot.bar()`**
+
+💡 **Explicação:** O método `df.plot.bar()` faz parte do sistema de plotting integrado do pandas, que usa matplotlib como backend.
+
+```python
+# Exemplo prático no nosso projeto:
+# Gráfico de barras dos tipos de contrato
+df_churn.Contract.value_counts().plot.bar()
+
+# Gráfico de barras horizontal
+df_churn.Contract.value_counts().plot.barh()
+```
+
+---
+
+#### **Questão 10/10**
+
+**Qual função do pandas é usada para ler um arquivo CSV?**
+
+- [ ] `pandas.load_csv()`
+- [ ] `pandas.open_csv()`
+- [ ] `pandas.read_data()`
+- [x] **`pandas.read_csv()`**
+
+💡 **Explicação:** A função `pandas.read_csv()` é o método padrão para ler arquivos CSV. Sintaxe básica: `pd.read_csv('arquivo.csv')`.
+
+---
+
+### 🎯 **Gabarito Rápido:**
+
+1. **✅** Uma tabela que mostra a correlação entre diferentes variáveis
+2. **✅** `df.shape`
+3. **✅** `df.describe()`
+4. **✅** `df.fillna(df.mean())`
+5. **✅** Reamostragem de dados (NÃO é técnica comum de EDA)
+6. **✅** Resumir e visualizar os principais aspectos dos dados
+7. **✅** `df[df['A'] > 10]`
+8. **✅** Facilitar a identificação de padrões e anomalias nos dados
+9. **✅** `df.plot.bar()`
+10. **✅** `pandas.read_csv()`
+
+### 💪 **Como Usar Este Quiz:**
+
+- **📚 Revisão**: Use antes de estudar o notebook para identificar lacunas
+- **🎯 Teste**: Use após completar análises para verificar aprendizado
+- **🔄 Prática**: Implemente os conceitos no Jupyter usando os templates
+- **📝 Anotações**: Marque questões que errou para revisar depois
+
+---
+
+## 🚀 **Próximos Passos com os Templates**
+
+### 📝 **Como Praticar:**
+
+1. **Abra um novo notebook** Jupyter
+2. **Copie um template** deste README
+3. **Carregue seus próprios dados** ou use os datasets do projeto
+4. **Modifique as variáveis** para explorar diferentes relações
+5. **Documente suas descobertas** em células markdown
+
+### 🎯 **Exercícios Sugeridos:**
+
+**🔍 Exercício 1: Nova Hipótese**
+
+```python
+# Use o template de teste de hipóteses para testar:
+# "Clientes com múltiplas linhas telefônicas têm maior churn?"
+test_hypothesis(df_churn, 'Churn', 'MultipleLines',
+                'Múltiplas Linhas → Maior Churn')
+```
+
+**📊 Exercício 2: Nova Visualização**
+
+```python
+# Use o template de análise categórica para explorar:
+analyze_categorical(df_churn, 'PaymentMethod')
+```
+
+**🔗 Exercício 3: Nova Correlação**
+
+```python
+# Explore relações entre:
+correlation_analysis(df_churn, 'MonthlyCharges', 'TotalCharges')
+```
+
+**🚨 Exercício 4: Outliers em Nova Variável**
+
+```python
+# Detecte outliers em:
+outliers = detect_outliers_iqr(df_churn, 'MonthlyCharges')
+```
+
+### 💡 **Dicas de Estudo:**
+
+- **📖 Sempre leia primeiro:** Entenda a teoria antes de executar código
+- **✏️ Adapte os templates:** Mude variáveis, cores, títulos
+- **📋 Documente tudo:** Use células markdown para explicar descobertas
+- **🧪 Teste hipóteses:** Sempre formule uma pergunta antes de analisar
+- **📊 Visualize muito:** Gráficos revelam padrões que números não mostram
+
+---
+
 ## 🏆 Status do Projeto
 
 - ✅ **Preparação de Dados**: Completo
 - ✅ **Análise Univariada**: Completo
 - ✅ **Análise Bivariada**: Completo
 - ✅ **Testes de Hipóteses**: 4 hipóteses testadas
+- ✅ **Templates Jupyter**: 7 templates prontos para estudo
+- ✅ **Quiz EDA com Pandas**: 10 questões com explicações
 - 🔄 **Detecção de Outliers**: Em andamento (célula 139)
 - ⏳ **Próximas análises**: Aguardando continuação do curso
 
 **Total de Células**: 139 (sendo 12 markdown e 127 código)  
 **Execuções**: Todas as células executadas com sucesso  
-**Datasets**: 3 arquivos CSV unificados em 1 DataFrame principal
+**Datasets**: 3 arquivos CSV unificados em 1 DataFrame principal  
+**Quiz**: 10 questões sobre conceitos fundamentais de EDA
 
 ---
 
