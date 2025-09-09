@@ -30,82 +30,43 @@ Este projeto faz parte do curso **"Machine Learning em Inteligência Artificial"
 
 ---
 
-## 🚀 **Templates Jupyter para Estudos**
+## 🚀 **Como Usar o Jupyter Notebook**
 
 ### � **Células Base para EDA**
 
-**Template para carregamento inicial:**
+**Como Usar o Notebook - Seção Inicial:**
 
-```python
-# Importações essenciais
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from scipy.stats import chi2_contingency
+**Células 1-2: Importações**
 
-# Configuração de visualização
-plt.style.use('ggplot')
-sns.set_palette("husl")
-```
+- Execute as células com importações das bibliotecas pandas, numpy, matplotlib, seaborn
+- Note a importação da scipy.stats para testes estatísticos
+- Observe a configuração do estilo de gráficos aplicada
 
-**Template para merge de datasets:**
+**Como Fazer Merge dos Datasets:**
 
-```python
-# Carregamento dos 3 datasets
-df_customers = pd.read_csv('./datasets/churn_customers.csv')
-df_services = pd.read_csv('./datasets/churn_services.csv')
-df_contracts = pd.read_csv('./datasets/churn_contracts.csv')
+**Células 3-8: Carregamento e Unificação**
 
-# Merge sequencial
-df_unified = df_customers.merge(df_services, on='customerID', how='inner')\
-                        .merge(df_contracts, on='customerID', how='inner')
+- Execute as células que carregam os 3 arquivos CSV
+- Observe como fazer merge usando `customerID` como chave comum
+- Execute o merge sequencial: customers + services + contracts
+- Resultado final: DataFrame com 7043 linhas e 24 colunas unificadas
 
-print(f"📊 Dados unificados: {df_unified.shape}")
-```
+### 🧪 **Como Executar Testes de Hipóteses no Notebook**
 
-### 🧪 **Templates para Testes de Hipóteses**
+**Células 80-100: Testes Chi-Square**
 
-**Template Chi-Square para variáveis categóricas:**
-
-```python
-def test_hypothesis(df, var1, var2, hypothesis_name):
-    """Template para teste de hipótese com Chi-Square"""
-
-    # 1. Criar tabela de contingência
-    crosstab = pd.crosstab(df[var1], df[var2], margins=True, margins_name='Total')
-    print(f"📋 Tabela de Contingência - {hypothesis_name}")
-    print(crosstab)
-    print("\n" + "="*50 + "\n")
-
-    # 2. Aplicar teste Chi-Square
-    chi2, p_value, dof, expected = chi2_contingency(crosstab.iloc[:-1, :-1])
-
-    # 3. Resultados
-    print(f"🧪 Teste Chi-Square - {hypothesis_name}")
-    print(f"Chi² = {chi2:.4f}")
-    print(f"P-value = {p_value:.6f}")
-    print(f"Graus de liberdade = {dof}")
-
-    # 4. Conclusão
-    alpha = 0.05
-    if p_value <= alpha:
-        print(f"✅ HIPÓTESE CONFIRMADA (p ≤ {alpha})")
-        print("➡️  As variáveis são dependentes (há associação)")
-    else:
-        print(f"❌ HIPÓTESE REJEITADA (p > {alpha})")
-        print("➡️  Não há evidência de associação")
-
-    return {'chi2': chi2, 'p_value': p_value, 'confirmed': p_value <= alpha}
-
-# Exemplo de uso:
-result = test_hypothesis(df_churn, 'Churn', 'Contract',
-                        'Contrato Mensal → Maior Churn')
-```
+- Execute as células que criam tabelas de contingência com `pd.crosstab()`
+- Observe como aplicar o teste Chi-Square usando `chi2_contingency()`
+- Veja a interpretação dos resultados: p-value ≤ 0.05 confirma hipótese
+- Execute os 4 testes implementados:
+  - **Hipótese 1**: Contrato Mensal → Maior Churn ✅
+  - **Hipótese 2**: Tempo < 6 meses → Maior Churn ✅
+  - **Hipótese 3**: Idade > 65 anos → Maior Churn ✅
+  - **Hipótese 4**: Correlação Tempo vs Valor ✅
 
 ### 📊 **Templates de Visualização**
 
-**Template para análise univariada:**
+**Como Fazer Análise Univariada no Notebook:**
 
 ```python
 def analyze_categorical(df, column):
