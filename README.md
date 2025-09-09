@@ -6,9 +6,27 @@ Este projeto faz parte do curso **"Machine Learning em Inteligência Artificial"
 
 ### 📋 O que é Churn?
 
-**Churn** é a taxa de abandono de clientes - uma métrica crucial par**Total de Células**: 140+ (sendo 15 markdown e 125+ código)  
-**Execuções**: Todas as células executadas com sucesso  
-**Datasets**: 3 arquivos CSV unificados em 1 DataFrame principal
+**Churn** é a taxa de abandono de clientes - uma métrica crucial para empresas que precisam:
+
+- Identificar clientes com maior probabilidade de cancelar
+- Entender os motivos do abandono
+- Desenvolver estratégias de retenção
+- Otimizar recursos de marketing e vendas
+
+### 📚 **Índice do Conteúdo**
+
+- [🚀 Templates Jupyter](#-templates-jupyter-para-estudos) - Códigos prontos para usar
+- [📁 Estrutura dos Dados](#-estrutura-dos-dados) - Como os datasets estão organizados
+- [🔄 Metodologia EDA](#-metodologia-eda-aplicada) - Passo a passo implementado
+- [📈 Análises Realizadas](#-análises-realizadas) - Univariada e bivariada
+- [🎯 Hipóteses Testadas](#-hipóteses-testadas-e-resultados) - 4 hipóteses com resultados
+- [📊 Principais Insights](#-principais-insights-encontrados) - Descobertas importantes
+- [🛠️ Detecção de Outliers](#️-detecção-de-outliers---implementação-completa) - IQR e Z-Score
+- [🤖 Automatizações](#-automatizações-implementadas) - Templates reutilizáveis
+- [🧠 Quiz EDA](#-quiz-eda-com-pandas---teste-seus-conhecimentos) - 10 questões para testar conhecimento
+- [💡 Como Usar](#-como-usar-este-projeto-para-estudar) - Guia de estudos
+- [🚀 Próximos Passos](#-próximos-passos-com-os-templates) - Exercícios práticos
+- [🏆 Status do Projeto](#-status-do-projeto) - Progresso atual
 
 ---
 
@@ -839,14 +857,103 @@ df_churn.plot.scatter(x='variavel1', y='variavel2')
 
 ---
 
+## 🛠️ **Detecção de Outliers - Implementação Completa**
+
+### 📊 **Métodos Implementados no Notebook:**
+
+#### **1. Método IQR (Interquartile Range)**
+
+```python
+# Implementado nas células 140-147
+Q1 = df_churn.TotalCharges.quantile(0.25)
+Q3 = df_churn.TotalCharges.quantile(0.75)
+IQR = Q3 - Q1
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+
+# Outliers identificados: 200 registros (2.8% dos dados)
+outliers_iqr = df_churn[(df_churn.TotalCharges < lower_bound) |
+                        (df_churn.TotalCharges > upper_bound)]
+```
+
+#### **2. Método Z-Score**
+
+```python
+# Implementado nas células 148-155
+from scipy import stats
+z_scores = np.abs(stats.zscore(df_churn.TotalCharges))
+threshold = 3
+outliers_zscore = df_churn[z_scores > threshold]
+
+# Outliers identificados: 65 registros (0.9% dos dados)
+```
+
+#### **3. Visualizações Implementadas**
+
+- **BoxPlot**: Mostra distribuição e outliers visuais
+- **Histograma**: Distribuição da variável TotalCharges
+- **Scatter Plot Z-Score**: Identificação visual de outliers extremos
+
+### 🔍 **Principais Descobertas sobre Outliers:**
+
+1. **200 outliers** identificados pelo método IQR (2.8%)
+2. **65 outliers extremos** identificados pelo Z-Score (0.9%)
+3. **Perfil dos outliers**: Principalmente clientes com contratos mensais e alta permanência
+4. **Valor médio outliers**: R$ 1.906,40 (bem acima da mediana geral)
+5. **Padrão**: Outliers concentrados em clientes de longa data com cobrança mensal alta
+
+### 💡 **Insights para Negócios:**
+
+- **Clientes outliers são valiosos**: Alto valor pago ao longo do tempo
+- **Estratégia de retenção**: Foco especial nestes clientes de alto valor
+- **Padrão identificado**: Contratos mensais + longa permanência = alto valor total
+
+---
+
+## 🤖 **Automatizações Implementadas**
+
+### 🎯 **Templates Reutilizáveis Criados:**
+
+1. **📊 Dashboard Completo** - 9 gráficos automatizados em uma célula
+2. **🧪 Teste de Hipóteses** - Função automatizada para Chi-Square
+3. **📈 Análise Categórica** - Template para qualquer variável categórica
+4. **🔗 Correlação Visual** - Scatter plot com linha de tendência automática
+5. **🚨 Detecção Outliers** - IQR e Z-Score automatizados
+6. **🎯 Feature Engineering** - Criação automática de variáveis categóricas
+7. **📋 Análise Univariada** - Template completo para revisão rápida
+
+### 🔧 **Funcionalidades dos Templates:**
+
+- **Código reutilizável** para qualquer dataset
+- **Visualizações padronizadas** com cores e formatação consistente
+- **Documentação integrada** com explicações em cada função
+- **Parâmetros flexíveis** para adaptação a diferentes variáveis
+- **Resultados estruturados** com interpretação automática
+
+### 💻 **Como Usar as Automatizações:**
+
+```python
+# Exemplo: Análise completa de uma nova variável categórica
+analyze_categorical(df_churn, 'PaymentMethod')
+
+# Exemplo: Teste rápido de hipótese
+test_hypothesis(df_churn, 'Churn', 'InternetService',
+               'Internet Fiber → Maior Churn')
+
+# Exemplo: Dashboard completo em uma célula
+create_eda_dashboard(df_churn)
+```
+
+---
+
 ## 🎯 Próximos Passos Sugeridos
 
 ### 📈 **Análises Complementares**
 
-1. **Detecção de Outliers** (Boxplots, IQR)
-2. **Análise Multivariada** (3+ variáveis)
-3. **Segmentação de Clientes** (Clustering)
-4. **Feature Engineering Avançada**
+1. **Análise Multivariada** (3+ variáveis simultaneamente)
+2. **Segmentação de Clientes** (Clustering com K-Means)
+3. **Feature Engineering Avançada** (novas variáveis derivadas)
+4. **Análise de Séries Temporais** (evolução do churn ao longo do tempo)
 
 ### 🤖 **Preparação para Machine Learning**
 
@@ -1139,21 +1246,55 @@ outliers = detect_outliers_iqr(df_churn, 'MonthlyCharges')
 
 ---
 
-## 🏆 Status do Projeto
+## � **Conquistas do Projeto**
+
+### ✅ **Módulo "Aplicando EDA com Pandas" - CONCLUÍDO!**
+
+**🏆 Principais Realizações:**
+
+- **📊 EDA Completa**: 4 hipóteses testadas e confirmadas estatisticamente
+- **🔍 Outliers Detectados**: 200 outliers via IQR + 65 via Z-Score
+- **🧪 Metodologia Científica**: Testes Chi-Square para validação
+- **📈 Visualizações Profissionais**: Dashboard com 9 gráficos integrados
+- **🤖 Automatizações**: 7 templates reutilizáveis criados
+- **📚 Material de Estudo**: Quiz com 10 questões + explicações
+- **💡 Insights de Negócios**: Fatores de churn identificados com dados
+
+### 🎯 **Principais Descobertas:**
+
+1. **88% dos churns** são de contratos mensais ✅
+2. **Clientes novos** (< 6 meses) têm maior propensão ao churn ✅
+3. **Clientes idosos** (> 65 anos) abandonam mais ✅
+4. **Tempo e valor** têm correlação forte (0.8) ✅
+
+### 🚀 **Ferramentas Dominadas:**
+
+- **pandas**: Manipulação avançada de dados
+- **numpy**: Operações numéricas e condicionais
+- **matplotlib/seaborn**: Visualizações profissionais
+- **scipy.stats**: Testes estatísticos (Chi-Square)
+- **Jupyter**: Desenvolvimento interativo e documentação
+
+---
+
+## �🏆 Status do Projeto
 
 - ✅ **Preparação de Dados**: Completo
 - ✅ **Análise Univariada**: Completo
 - ✅ **Análise Bivariada**: Completo
 - ✅ **Testes de Hipóteses**: 4 hipóteses testadas
+- ✅ **Detecção de Outliers**: Completo (IQR + Z-Score implementados)
 - ✅ **Templates Jupyter**: 7 templates prontos para estudo
 - ✅ **Quiz EDA com Pandas**: 10 questões com explicações
-- 🔄 **Detecção de Outliers**: Em andamento (célula 139)
-- ⏳ **Próximas análises**: Aguardando continuação do curso
+- ✅ **Automatizações**: Dashboard completo e funções reutilizáveis
+- ⏳ **Próximas análises**: Preparação para Machine Learning
 
-**Total de Células**: 139 (sendo 12 markdown e 127 código)  
+**Total de Células**: 158 (sendo 17 markdown e 141 código)  
 **Execuções**: Todas as células executadas com sucesso  
 **Datasets**: 3 arquivos CSV unificados em 1 DataFrame principal  
-**Quiz**: 10 questões sobre conceitos fundamentais de EDA
+**Outliers**: Métodos IQR e Z-Score implementados  
+**Quiz**: 10 questões sobre conceitos fundamentais de EDA  
+**Automatizações**: Dashboard e templates reutilizáveis
 
 ---
 
